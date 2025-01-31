@@ -1,0 +1,20 @@
+{
+    "name": "kshitiz/backend",
+    "description": "k",
+    "autoload": {
+        "psr-4": {
+            "Kshitiz\\Backend\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ks"
+        }
+    ],
+    "require": {
+        "slim/slim": "^4.0",
+        "slim/psr7": "^1.7",
+        "vlucas/phpdotenv": "^5.6",
+        "illuminate/database": "^11.38"
+    }
+}

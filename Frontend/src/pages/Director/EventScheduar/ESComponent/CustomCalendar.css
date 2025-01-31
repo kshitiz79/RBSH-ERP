@@ -1,0 +1,40 @@
+/* Override background colors for specific event types */
+.rbc-event {
+  background-color: #4a90e2; /* Blue for events */
+  color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+/* Highlight the current day */
+.rbc-today {
+  background-color: rgba(74, 144, 226, 0.1); /* Light blue */
+}
+
+/* Calendar toolbar buttons */
+.rbc-toolbar button {
+  background: #4a90e2;
+  color: white;
+  border-radius: 4px;
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.rbc-toolbar button:hover {
+  background: #3c7bd6;
+}
+
+/* Calendar title styling */
+.rbc-toolbar-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4a90e2;
+}
+
+/* Calendar grid styling */
+.rbc-month-view, .rbc-time-view {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
