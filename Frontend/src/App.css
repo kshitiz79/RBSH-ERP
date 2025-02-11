@@ -1,0 +1,9 @@
+.dropdown-content {
+  transition: max-height 0.3s ease, opacity 0.2s ease-out;
+  opacity: 0;
+  visibility: hidden;
+}
+.dropdown-content.open {
+  opacity: 1;
+  visibility: visible;
+}

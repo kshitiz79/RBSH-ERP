@@ -1,61 +1,146 @@
-
-
+import React, { useState, useEffect, useRef } from "react";
 
 import EmployeeList from "./AtandanceComponent/EmployeeList";
 import AttendanceActivity from "./AtandanceComponent/AttendanceActivity";
 import AttendanceList from "./AtandanceComponent/AttendanceList";
 import Statistics from "./AtandanceComponent/Statistics";
-import { punchIn, punchOut } from "./../../../Api/AttandanceApi";
 import TimeSheet from "./AtandanceComponent/Timesheet";
-import React, { useState, useEffect } from "react";
+import { punchIn, punchOut, getAttendanceLogs, getStatistics } from "../../../Api/AttandanceApi";
 
 const AttendanceManagement = () => {
-
-
-  const [hasPunchedIn, setHasPunchedIn] = useState(false); // Tracks punch-in state
-  const [timesheet, setTimesheet] = useState({
-    date: new Date().toLocaleDateString(),
-    punchIn: null,
-    hours: 0,
-    break: 0,
-    overtime: 0,
-  });
-  const [isOnBreak, setIsOnBreak] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0); // Timer in seconds
+  const [hasPunchedIn, setHasPunchedIn] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
+  const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakTime, setBreakTime] = useState(0);
+  const [activities, setActivities] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [attendanceData, setAttendanceData] = useState([]);
+
+
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const userId = user.id;
+  const userRole = user.role;
+
+
+
+  const intervalRef = useRef(null);
+
+
+  useEffect(() => {
+    const fetchAttendanceLogs = async () => {
+      try {
+        const logs = await getAttendanceLogs();
+        console.log("Fetched Logs:", logs);
+        setActivities(logs);
+        setAttendanceData(logs);
+      } catch (error) {
+        console.error("Error fetching logs:", error);
+      }
+    };
+    fetchAttendanceLogs();
+  }, []);
+
+
+
+
+  const refreshStats = async () => {
+    try {
+      const statsData = await getStatistics();
+      setStats(statsData);
+    } catch (error) {
+      console.error("Error refreshing stats:", error);
+    }
+  };
+  
+  useEffect(() => {
+    refreshStats(); // Initial fetch
+  }, []);
+
+
+
+
+
+
+
+  const startTimer = (startTime) => {
+    intervalRef.current = setInterval(() => {
+      const now = new Date();
+      const timezoneOffset = now.getTimezoneOffset() * 60 * 1000; // Offset in milliseconds
+      const elapsed = Math.floor((now.getTime() - startTime + timezoneOffset) / 1000);
+      setElapsedTime(elapsed);
+    }, 1000);
+  };
+  
+  
+
+  const handlePunchIn = async () => {
+    try {
+      const result = await punchIn(userId, userRole);
+      alert(`Punch In successful at ${result.punch_in}`);
+
+      const punchInTime = new Date(result.punch_in).getTime();
+      const today = new Date().toLocaleDateString();
+      localStorage.setItem("punchInTime", JSON.stringify({ date: today, time: punchInTime }));
+
+      setHasPunchedIn(true);
+      setElapsedTime(0); // Reset elapsed time on punch-in
+      startTimer(punchInTime);
+    } catch (error) {
+      console.error("Error punching in:", error);
+    }
+  };
+
+  const handlePunchOut = async () => {
+    try {
+      const result = await punchOut(userId);
+      alert(`Punch Out successful! Production Time: ${result.production_time} hrs`);
+  
+      setHasPunchedIn(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setElapsedTime(0);
+      localStorage.removeItem("punchInTime");
+    } catch (error) {
+      console.error("Error punching out:", error.response ? error.response.data : error.message);
+      alert("Error punching out! Check console for details.");
+    }
+  };
+  
+
+  useEffect(() => {
+    const savedPunchIn = localStorage.getItem("punchInTime");
+    if (savedPunchIn) {
+      const { date, time } = JSON.parse(savedPunchIn);
+      const today = new Date().toLocaleDateString();
+      if (date === today) {
+        setHasPunchedIn(true);
+        startTimer(time);
+      }
+    }
+  
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+  
+  useEffect(() => {
+    let timer;
+    if (isOnBreak) {
+      timer = setInterval(() => {
+        setBreakTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isOnBreak]);
 
   const handleStartBreak = () => setIsOnBreak(true);
   const handleEndBreak = () => setIsOnBreak(false);
-
-
-  const activities = [
-    { type: "Punch In", time: "10:00 AM" },
-    { type: "Punch Out", time: "11:00 AM" },
-    { type: "Punch In", time: "11:30 AM" },
-    { type: "Punch Out", time: "01:30 PM" },
-
-  ];
-  
-
-  const stats = [
-    { label: "Today", value: 3.45, total: 8, color: "#4CAF50" },
-    { label: "This Week", value: 28, total: 40, color: "#F44336" },
-    { label: "This Month", value: 90, total: 160, color: "#FFC107" },
-    { label: "Remaining", value: 70, total: 160, color: "#2196F3" },
-    { label: "Overtime", value: 5, total: 10, color: "#FFEB3B" },
-  ];
-
-
-  
-  const attendanceData = [
-    { date: "19 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "2 hrs" },
-    { date: "20 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "0 hrs" },
-    { date: "21 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "0 hrs" },
-    { date: "22 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "1 hrs" },
-    { date: "23 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "3 hrs" },
-    { date: "24 Feb 2025", punchIn: "10 AM", punchOut: "7 PM", production: "9 hrs", break: "1 hrs", overtime: "0 hrs" },
-  ];
 
 
   const [employees, setEmployees] = useState([
@@ -87,66 +172,7 @@ const AttendanceManagement = () => {
   ]);
 
 
-  const handlePunchIn = async () => {
-    try {
-      const result = await punchIn(1, "employee"); // Replace with dynamic user ID and role
-      alert(`Punch In successful at ${result.punch_in}`);
-      setHasPunchedIn(true);
-      setTimesheet((prev) => ({
-        ...prev,
-        date: new Date().toLocaleDateString(),
-        punchIn: result.punch_in,
-      }));
 
-      // Start Timer
-      const interval = setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-      setTimerInterval(interval);
-    } catch (error) {
-      console.error("Error punching in:", error);
-    }
-  };
-
-  // Handle Punch Out
-  const handlePunchOut = async () => {
-    try {
-      const result = await punchOut(1); // Replace with dynamic user ID
-      alert(`Punch Out successful! Production Time: ${result.production_time} hrs`);
-      setHasPunchedIn(false);
-      setTimesheet((prev) => ({
-        ...prev,
-        hours: result.production_time,
-        overtime: result.overtime,
-      }));
-
-      // Stop Timer
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-      setElapsedTime(0);
-    } catch (error) {
-      console.error("Error punching out:", error);
-    }
-  };
-
-  useEffect(() => {
-    // Cleanup timer when the component unmounts
-    return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    };
-  }, [timerInterval]);
-
-  useEffect(() => {
-    let timer;
-    if (isOnBreak) {
-      timer = setInterval(() => {
-        setBreakTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isOnBreak]);
 
 
 
@@ -156,7 +182,7 @@ const AttendanceManagement = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
       {/* Timesheet */}
       <TimeSheet
-      timesheet={{ date: "2025-01-21", punchIn: "09:00", break: breakTime / 3600 }}
+     
       hasPunchedIn={hasPunchedIn}
       isOnBreak={isOnBreak}
       onPunchIn={handlePunchIn}
@@ -171,6 +197,7 @@ const AttendanceManagement = () => {
 
       {/* Today's Activity */}
       <AttendanceActivity activities={activities} />
+
 
      
     </div>

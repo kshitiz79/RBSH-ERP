@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'kshitiz/backend',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '8600950dfa963271e07631926091ad32b0c6f231',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -119,9 +119,9 @@
             'dev_requirement' => false,
         ),
         'kshitiz/backend' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '8600950dfa963271e07631926091ad32b0c6f231',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -33,8 +33,19 @@ const Auth = () => {
         return;
       }
   
+      // Debugging: Log the user object
+      console.log("User Logged In:", data.user);
+  
+      if (!data.user || !data.user.role) {
+        setError("Invalid user data from server.");
+        return;
+      }
+  
       // Store user details in localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.user.role); // ✅ Store role separately
+  
+      console.log("Role Stored in LocalStorage:", data.user.role); // Debugging
   
       // Redirect to the appropriate dashboard
       switch (data.user.role) {
@@ -55,6 +66,7 @@ const Auth = () => {
       console.error(err);
     }
   };
+  
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
